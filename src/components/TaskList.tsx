@@ -1,25 +1,34 @@
-import type { TaskData } from "../types";
+import type { RootState, AppDispatch } from "../lib/store";
+
+import { useDispatch, useSelector } from "react-redux";
+
+import { updateTaskState } from "../lib/store";
+// import type { TaskData } from "../types";
 
 import Task from "./Task";
 
-type TaskListProps = {
-  loading?: boolean;
-  tasks: TaskData[];
-  onArchiveTask: (id: string) => void;
-  onPinTask: (id: string) => void;
-};
-
-export default function TaskList({
-  loading = false,
-  tasks,
-  onPinTask,
-  onArchiveTask,
-}: TaskListProps) {
-  const events = {
-    onPinTask,
-    onArchiveTask,
+export default function TaskList() {
+  // We're retrieving our state from the store
+  const tasks = useSelector((state: RootState) => {
+    const tasksInOrder = [
+      ...state.taskbox.tasks.filter((t) => t.state === "TASK_PINNED"),
+      ...state.taskbox.tasks.filter((t) => t.state !== "TASK_PINNED"),
+    ];
+    const filteredTasks = tasksInOrder.filter(
+      (t) => t.state === "TASK_INBOX" || t.state === "TASK_PINNED",
+    );
+    return filteredTasks;
+  });
+  const { status } = useSelector((state: RootState) => state.taskbox);
+  const dispatch = useDispatch<AppDispatch>();
+  const pinTask = (value: string) => {
+    // We're dispatching the Pinned event back to our store
+    dispatch(updateTaskState({ id: value, newTaskState: "TASK_PINNED" }));
   };
-
+  const archiveTask = (value: string) => {
+    // We're dispatching the Archive event back to our store
+    dispatch(updateTaskState({ id: value, newTaskState: "TASK_ARCHIVED" }));
+  };
   const LoadingRow = (
     <div className="loading-item">
       <span className="glow-checkbox" />
@@ -29,7 +38,7 @@ export default function TaskList({
     </div>
   );
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <div className="list-items" data-testid="loading" key={"loading"}>
         {LoadingRow}
@@ -52,16 +61,16 @@ export default function TaskList({
       </div>
     );
   }
-  const taskInOrder = [
-    ...tasks.filter((t)=> t.state === "TASK_PINNED"),
-    ...tasks.filter((t)=> t.state === "TASK_INBOX"),
-    ...tasks.filter((t)=> t.state === "TASK_ARCHIVED"),
-   
-  ]
+
   return (
-    <div className="list-item">
-      {taskInOrder.map((task) => (
-        <Task key={task.id} task={task} {...events} />
+    <div className="list-item" data-testid="success" key="success">
+      {tasks.map((task) => (
+        <Task
+          key={task.id}
+          task={task}
+          onPinTask={pinTask}
+          onArchiveTask={archiveTask}
+        />
       ))}
     </div>
   );
