@@ -35,7 +35,8 @@ export const Default: Story = {
 export const WithPinnedTasks: Story = {
   args: {
     tasks: [
-      ...Default.args.tasks.slice(0, 5),
+      ...Default.args.tasks.slice(0, 4),
+      { id: '5', title: 'Task 5 (archived)', state: 'TASK_ARCHIVED'},
       { id: '6', title: 'Task 6 (pinned)', state: 'TASK_PINNED' },
     ],
   },
